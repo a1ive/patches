@@ -1,0 +1,35 @@
+From 5888e3d87f60021c4cc3e854241dcd20b8be0196 Mon Sep 17 00:00:00 2001
+From: a1ive <ligenlive@gmail.com>
+Date: Sun, 8 Mar 2020 16:43:09 +0800
+Subject: [PATCH 2/3] fix undefined reference to bfd_get_section* error
+
+https://wiki.gentoo.org/wiki/Binutils_2.34_porting_notes/undefined_reference_to_bfd_get_section_*
+---
+ src/efireloc.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/efireloc.c b/src/efireloc.c
+index e0736cd..660b6e0 100644
+--- a/src/efireloc.c
++++ b/src/efireloc.c
+@@ -306,7 +306,7 @@ static void process_reloc ( bfd *bfd __unused, asection *section, arelent *rel,
+ 			    struct pe_relocs **pe_reltab ) {
+ 	reloc_howto_type *howto = rel->howto;
+ 	asymbol *sym = *(rel->sym_ptr_ptr);
+-	unsigned long offset = ( bfd_get_section_vma ( bfd, section ) +
++	unsigned long offset = ( bfd_section_vma ( section ) +
+ 				 rel->address - BASE_ADDRESS );
+ 
+ 	if ( bfd_is_abs_section ( sym->section ) ) {
+@@ -431,7 +431,7 @@ static void efireloc ( const char *elf_name, const char *pe_name ) {
+ 	/* For each input section, create the appropriate relocation records */
+ 	for ( section = bfd->sections ; section ; section = section->next ) {
+ 		/* Discard non-allocatable sections */
+-		if ( ! ( bfd_get_section_flags ( bfd, section ) & SEC_ALLOC ) )
++		if ( ! ( bfd_section_flags ( section ) & SEC_ALLOC ) )
+ 			continue;
+ 		/* Add relocations from this section */
+ 		reltab = read_reltab ( bfd, symtab, section );
+-- 
+2.25.1
+

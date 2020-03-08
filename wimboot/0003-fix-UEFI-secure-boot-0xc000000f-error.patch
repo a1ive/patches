@@ -1,0 +1,101 @@
+From 834359c0f7cf039cba0d717cb7da01e7daff9f57 Mon Sep 17 00:00:00 2001
+From: a1ive <ligenlive@gmail.com>
+Date: Sun, 8 Mar 2020 16:44:54 +0800
+Subject: [PATCH 3/3] fix UEFI secure boot 0xc000000f error
+
+---
+ src/efiboot.c | 57 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 57 insertions(+)
+
+diff --git a/src/efiboot.c b/src/efiboot.c
+index 5c800e9..ac82f90 100644
+--- a/src/efiboot.c
++++ b/src/efiboot.c
+@@ -38,6 +38,10 @@
+ /** Original OpenProtocol() method */
+ static EFI_OPEN_PROTOCOL orig_open_protocol;
+ 
++/** Original GetVariable() and ExitBootServices() */
++static EFI_GET_VARIABLE orig_get_variable;
++static EFI_EXIT_BOOT_SERVICES orig_exit_boot_services;
++
+ /**
+  * Intercept OpenProtocol()
+  *
+@@ -80,6 +84,53 @@ efi_open_protocol_wrapper ( EFI_HANDLE handle, EFI_GUID *protocol,
+ 	return 0;
+ }
+ 
++static inline int
++efi_strcmp (const unsigned char *s1, const CHAR16 *s2)
++{
++  while (*s1 && *s2)
++  {
++    if (*s1 != *s2)
++      break;
++    s1++;
++    s2++;
++  }
++  return (int) (UINT8) *s1 - (int) (UINT16) *s2;
++}
++
++static EFI_STATUS EFIAPI
++efi_get_variable_wrapper (CHAR16 *variable_name,
++                          EFI_GUID *vendor_guid,
++                          UINT32 *attributes,
++                          UINTN *data_size,
++                          VOID *data)
++{
++	unsigned char sb[] = "SecureBoot";
++
++	EFI_STATUS status;
++
++	status = orig_get_variable(variable_name,
++                             vendor_guid, attributes, data_size, data);
++	if (efi_strcmp (sb, variable_name) == 0)
++	{
++		if (*data_size)
++		memset (data, 0, 1);
++		*data_size = 1;
++	}
++	return status;
++}
++
++static EFI_STATUS EFIAPI
++efi_exit_bs_wrapper (EFI_HANDLE image_handle,UINTN map_key)
++{
++	if (orig_get_variable)
++	{
++		EFI_RUNTIME_SERVICES *rs = efi_systab->RuntimeServices;
++		rs->GetVariable = orig_get_variable;
++		orig_get_variable = NULL;
++	}
++	return orig_exit_boot_services (image_handle, map_key);
++}
++
+ /**
+  * Boot from EFI device
+  *
+@@ -90,6 +141,7 @@ efi_open_protocol_wrapper ( EFI_HANDLE handle, EFI_GUID *protocol,
+ void efi_boot ( struct vdisk_file *file, EFI_DEVICE_PATH_PROTOCOL *path,
+ 		EFI_HANDLE device ) {
+ 	EFI_BOOT_SERVICES *bs = efi_systab->BootServices;
++	EFI_RUNTIME_SERVICES *rs = efi_systab->RuntimeServices;
+ 	union {
+ 		EFI_LOADED_IMAGE_PROTOCOL *image;
+ 		void *intf;
+@@ -100,6 +152,11 @@ void efi_boot ( struct vdisk_file *file, EFI_DEVICE_PATH_PROTOCOL *path,
+ 	EFI_HANDLE handle;
+ 	EFI_STATUS efirc;
+ 
++	orig_get_variable = rs->GetVariable;
++	rs->GetVariable = efi_get_variable_wrapper;
++	orig_exit_boot_services = bs->ExitBootServices;
++	bs->ExitBootServices = efi_exit_bs_wrapper;
++
+ 	/* Allocate memory */
+ 	pages = ( ( file->len + PAGE_SIZE - 1 ) / PAGE_SIZE );
+ 	if ( ( efirc = bs->AllocatePages ( AllocateAnyPages,
+-- 
+2.25.1
+
