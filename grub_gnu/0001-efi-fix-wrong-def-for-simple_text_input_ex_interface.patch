@@ -1,0 +1,26 @@
+From f6a845646979123bb799a28221a8c550144c3f9a Mon Sep 17 00:00:00 2001
+From: a1ive <10670106+a1ive@users.noreply.github.com>
+Date: Mon, 18 May 2020 14:24:14 +0800
+Subject: [PATCH 1/9] efi: fix wrong def for simple_text_input_ex_interface
+
+---
+ include/grub/efi/api.h | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/include/grub/efi/api.h b/include/grub/efi/api.h
+index 937058d..0bd3393 100644
+--- a/include/grub/efi/api.h
++++ b/include/grub/efi/api.h
+@@ -1403,7 +1403,8 @@ struct grub_efi_simple_text_input_ex_interface
+ 	grub_efi_status_t
+ 	(*register_key_notify) (struct grub_efi_simple_text_input_ex_interface *this,
+ 				grub_efi_key_data_t *key_data,
+-				grub_efi_key_notify_function_t key_notification_function);
++				grub_efi_key_notify_function_t key_notification_function,
++				void **notify_handle);
+ 
+ 	grub_efi_status_t
+ 	(*unregister_key_notify) (struct grub_efi_simple_text_input_ex_interface *this,
+-- 
+2.26.2
+

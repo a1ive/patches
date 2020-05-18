@@ -1,0 +1,37 @@
+From 734d4c6d5de7bae0ef906aeccc258eed3c8ab4f0 Mon Sep 17 00:00:00 2001
+From: a1ive <10670106+a1ive@users.noreply.github.com>
+Date: Mon, 18 May 2020 14:35:25 +0800
+Subject: [PATCH 4/9] gptsync: fix bug in CHS calculation
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+According to: http://starman.vertcomp.com/asm/mbr/PartTables.htm
+For partitions which begin or end beyond  the 1024th cylinder,
+the three CHS bytes should always be filled with: FE FF FF ;
+which are decoded as follows:Byte 1:  FEh = 254
+for a total of 255 heads.Bytes 2 and 3:  FFh and FFh
+— split into two full binary counts of
+6 bits (11 1111; 3Fh = 63 sectors), and 10 bits (11 1111 1111)
+or 3FFh = 1023 for a total of 1024 cylinders. CHS: 1023, 254, 63.
+---
+ grub-core/commands/gptsync.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/grub-core/commands/gptsync.c b/grub-core/commands/gptsync.c
+index 444e248..214ab74 100644
+--- a/grub-core/commands/gptsync.c
++++ b/grub-core/commands/gptsync.c
+@@ -49,7 +49,8 @@ lba_to_chs (grub_uint32_t lba, grub_uint8_t *cl, grub_uint8_t *ch,
+ 
+   if (cylinder >= cylinders)
+     {
+-      *cl = *ch = *dh = 0xff;
++      *cl = *ch = 0xff;
++      *dh = 0xfe;
+       return;
+     }
+ 
+-- 
+2.26.2
+

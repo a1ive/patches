@@ -1,0 +1,25 @@
+From 87734dd050cd534dccce7493ee34a6c92616c546 Mon Sep 17 00:00:00 2001
+From: a1ive <10670106+a1ive@users.noreply.github.com>
+Date: Mon, 18 May 2020 14:32:05 +0800
+Subject: [PATCH 3/9] read: fix overflow in grub_getline
+
+---
+ grub-core/commands/read.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/grub-core/commands/read.c b/grub-core/commands/read.c
+index fe3e88b..8921aee 100644
+--- a/grub-core/commands/read.c
++++ b/grub-core/commands/read.c
+@@ -34,7 +34,7 @@ grub_getline (void)
+   int i;
+   char *line;
+   char *tmp;
+-  char c;
++  int c;
+ 
+   i = 0;
+   line = grub_malloc (1 + i + sizeof('\0'));
+-- 
+2.26.2
+

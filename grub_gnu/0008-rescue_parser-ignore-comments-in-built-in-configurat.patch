@@ -1,0 +1,28 @@
+From f8a5d8b5cf624af3c0cfcbba9ccf7c3a6f02d309 Mon Sep 17 00:00:00 2001
+From: a1ive <10670106+a1ive@users.noreply.github.com>
+Date: Mon, 18 May 2020 14:52:42 +0800
+Subject: [PATCH 8/9] rescue_parser: ignore comments in built-in configuration
+ file
+
+---
+ grub-core/kern/rescue_parser.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/grub-core/kern/rescue_parser.c b/grub-core/kern/rescue_parser.c
+index 6338366..e248e51 100644
+--- a/grub-core/kern/rescue_parser.c
++++ b/grub-core/kern/rescue_parser.c
+@@ -63,6 +63,10 @@ grub_rescue_parse_line (char *line,
+   if (*name == '\0')
+     goto quit;
+ 
++  /* If this is a comment, restart.  */
++  if (*name == '#')
++    goto quit;
++
+   cmd = grub_command_find (name);
+   if (cmd)
+     {
+-- 
+2.26.2
+

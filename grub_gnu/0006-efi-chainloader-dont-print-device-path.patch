@@ -1,0 +1,35 @@
+From 22d2e49ce587ba0c302d5495d2c4cde5a000e0fb Mon Sep 17 00:00:00 2001
+From: a1ive <10670106+a1ive@users.noreply.github.com>
+Date: Mon, 18 May 2020 14:42:53 +0800
+Subject: [PATCH 6/9] efi/chainloader: dont print device path
+
+---
+ grub-core/loader/efi/chainloader.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
+
+diff --git a/grub-core/loader/efi/chainloader.c b/grub-core/loader/efi/chainloader.c
+index cd92ea3..bfbdb80 100644
+--- a/grub-core/loader/efi/chainloader.c
++++ b/grub-core/loader/efi/chainloader.c
+@@ -179,7 +179,7 @@ make_file_path (grub_efi_device_path_t *dp, const char *filename)
+   /* Fill the file path for the directory.  */
+   d = (grub_efi_device_path_t *) ((char *) file_path
+ 				  + ((char *) d - (char *) dp));
+-  grub_efi_print_device_path (d);
++
+   copy_file_path ((grub_efi_file_path_device_path_t *) d,
+ 		  dir_start, dir_end - dir_start);
+ 
+@@ -267,9 +267,6 @@ grub_cmd_chainloader (grub_command_t cmd __attribute__ ((unused)),
+   if (! file_path)
+     goto fail;
+ 
+-  grub_printf ("file path: ");
+-  grub_efi_print_device_path (file_path);
+-
+   size = grub_file_size (file);
+   if (!size)
+     {
+-- 
+2.26.2
+

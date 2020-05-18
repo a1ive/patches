@@ -1,0 +1,55 @@
+From 36bc95823a91b897fe6b798c8f447e8e1aa04938 Mon Sep 17 00:00:00 2001
+From: a1ive <10670106+a1ive@users.noreply.github.com>
+Date: Mon, 18 May 2020 14:55:03 +0800
+Subject: [PATCH 9/9] fshelp: allow case-insensitive filename by default
+
+---
+ grub-core/commands/test.c | 7 ++++++-
+ grub-core/fs/fshelp.c     | 5 +++++
+ 2 files changed, 11 insertions(+), 1 deletion(-)
+
+diff --git a/grub-core/commands/test.c b/grub-core/commands/test.c
+index 62d3fb3..739ce13 100644
+--- a/grub-core/commands/test.c
++++ b/grub-core/commands/test.c
+@@ -62,8 +62,13 @@ find_file (const char *cur_filename, const struct grub_dirhook_info *info,
+ 	   void *data)
+ {
+   struct test_parse_ctx *ctx = data;
++  const char *case_sensitive = NULL;
++  int case_insensitive = info->case_insensitive;
++  case_sensitive = grub_env_get ("grub_fs_case_sensitive");
++  if (! case_sensitive || case_sensitive[0] != '1' )
++    case_insensitive = 1;
+ 
+-  if ((info->case_insensitive ? grub_strcasecmp (cur_filename, ctx->filename)
++  if ((case_insensitive ? grub_strcasecmp (cur_filename, ctx->filename)
+        : grub_strcmp (cur_filename, ctx->filename)) == 0)
+     {
+       ctx->file_info = *info;
+diff --git a/grub-core/fs/fshelp.c b/grub-core/fs/fshelp.c
+index 4c902ad..a71325d 100644
+--- a/grub-core/fs/fshelp.c
++++ b/grub-core/fs/fshelp.c
+@@ -24,6 +24,7 @@
+ #include <grub/fshelp.h>
+ #include <grub/dl.h>
+ #include <grub/i18n.h>
++#include <grub/env.h>
+ 
+ GRUB_MOD_LICENSE ("GPLv3+");
+ 
+@@ -123,6 +124,10 @@ find_file_iter (const char *filename, enum grub_fshelp_filetype filetype,
+ 		grub_fshelp_node_t node, void *data)
+ {
+   struct grub_fshelp_find_file_iter_ctx *ctx = data;
++  const char *case_sensitive = NULL;
++  case_sensitive = grub_env_get ("grub_fs_case_sensitive");
++  if (! case_sensitive || case_sensitive[0] != '1')
++    filetype |= GRUB_FSHELP_CASE_INSENSITIVE;
+ 
+   if (filetype == GRUB_FSHELP_UNKNOWN ||
+       ((filetype & GRUB_FSHELP_CASE_INSENSITIVE)
+-- 
+2.26.2
+

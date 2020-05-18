@@ -1,0 +1,25 @@
+From e3f1b5a39fab78029ddb3a46b2c13727e274e3ab Mon Sep 17 00:00:00 2001
+From: a1ive <10670106+a1ive@users.noreply.github.com>
+Date: Mon, 18 May 2020 14:26:02 +0800
+Subject: [PATCH 2/9] msdospart: add missing parameter
+
+---
+ grub-core/parttool/msdospart.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/grub-core/parttool/msdospart.c b/grub-core/parttool/msdospart.c
+index dcbf74e..ec36ebf 100644
+--- a/grub-core/parttool/msdospart.c
++++ b/grub-core/parttool/msdospart.c
+@@ -128,7 +128,7 @@ static grub_err_t grub_pcpart_type (const grub_device_t dev,
+       dev->disk->partition = part;
+       return grub_error (GRUB_ERR_BAD_ARGUMENT,
+ 			 N_("the partition type 0x%x isn't "
+-			    "valid"));
++			    "valid"), type);
+     }
+ 
+   mbr.entries[index].type = type;
+-- 
+2.26.2
+
